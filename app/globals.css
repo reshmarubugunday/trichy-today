@@ -1,0 +1,87 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-primary: #C8102E;
+  --color-primary-dark: #9B0C23;
+  --color-primary-light: #E8405A;
+  --color-accent: #F5A623;
+  --color-accent-dark: #D4891A;
+  --color-background: #FAFAF8;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #6B7280;
+  --color-border: #E5E7EB;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Noto Serif', Georgia, serif;
+  --font-tamil: 'Noto Sans Tamil', sans-serif;
+
+  --breakpoint-xs: 375px;
+}
+
+:root {
+  --background: #FAFAF8;
+  --foreground: #1A1A1A;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+/* Breaking news ticker animation */
+@keyframes ticker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.ticker-animate {
+  animation: ticker 30s linear infinite;
+  white-space: nowrap;
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Prose customizations for article body */
+.article-body h2 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-primary);
+}
+.article-body p {
+  line-height: 1.85;
+  margin-bottom: 1.25rem;
+  font-size: 1.05rem;
+  color: #374151;
+}
