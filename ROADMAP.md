@@ -9,7 +9,7 @@ Frontend only, mock data, no users, no backend, not deployed.
 > Nothing else works without these.
 
 - [ ] **Database setup** — Supabase project, run schema migrations (news, classifieds, ads, users tables)
-- [ ] **Authentication** — Phone OTP login via Supabase Auth + SMS provider (MSG91 or Twilio)
+- [ ] **Authentication** — Email OTP login via Supabase Auth (built-in email sending, no SMS provider)
 - [ ] **Image storage** — Supabase Storage buckets for classified images and news hero images
 - [ ] **Environment config** — `.env.local` for secrets, Supabase keys, etc.
 - [ ] **Replace mock data** — Swap `lib/data/` functions to hit Supabase instead of in-memory arrays
@@ -108,7 +108,7 @@ Phase 8 (Legal)         ── draft in parallel; must complete before public la
 | Item | Effort | Risk |
 |------|--------|------|
 | Supabase setup + data migration | Low | Low |
-| Phone OTP auth | Medium | Low — Supabase handles most of it |
+| Email OTP auth | Low | Low — Supabase handles all of it, no SMS provider needed |
 | Admin panel | High | Medium — lots of UI to build |
 | RSS ingestion worker | Medium | Medium — feed quality varies |
 | Razorpay integration | Medium | Low |
@@ -122,8 +122,8 @@ Phase 8 (Legal)         ── draft in parallel; must complete before public la
 ```sql
 users (
   id uuid PK,
-  phone varchar(15) UNIQUE,   -- OTP verified
-  email varchar,
+  phone varchar(15) UNIQUE,   -- optional, plain contact field, not auth
+  email varchar,              -- OTP verified, primary login identifier
   name varchar,
   is_verified boolean,
   role enum('user', 'editor', 'admin'),
