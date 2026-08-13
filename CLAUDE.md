@@ -82,7 +82,7 @@ When adding new data needs, follow this pattern:
 
 See `ROADMAP.md` for the full 8-phase plan. Current status: **Phase 0 complete** (frontend with mock data).
 
-**Next:** Phase 1 — Supabase DB, phone OTP auth, image storage, replace mock data.
+**Next:** Phase 1 — Supabase DB, email OTP auth, image storage, replace mock data.
 
 ## Running Locally
 
