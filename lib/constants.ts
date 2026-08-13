@@ -1,5 +1,6 @@
 import { NewsCategory } from '@/types/news';
 import { ClassifiedCategory } from '@/types/classifieds';
+import { AdPlacement } from '@/types/ads';
 
 export const NEWS_CATEGORIES: { value: NewsCategory; label: string; labelTamil: string }[] = [
   { value: 'local', label: 'Local', labelTamil: 'உள்ளூர்' },
@@ -85,4 +86,13 @@ export const TRICHY_AREAS = [
   'Mannarpuram',
   'Karumandapam',
   'Others',
+];
+
+export const AD_PLACEMENTS: { value: AdPlacement; label: string }[] = [
+  { value: 'homepage-hero', label: 'Homepage Hero' },
+  { value: 'header-leaderboard', label: 'Header Leaderboard' },
+  { value: 'sidebar-rectangle', label: 'Sidebar Rectangle' },
+  { value: 'article-inline', label: 'Article Inline' },
+  { value: 'classifieds-inline', label: 'Classifieds Inline' },
+  { value: 'footer-banner', label: 'Footer Banner' },
 ];
