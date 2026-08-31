@@ -26,7 +26,7 @@ graph TB
     Ads["Ads / Monetization<br/>(cross-cutting, not a page vertical)"]
 
     subgraph Platform["Shared Platform Layer"]
-        Auth["Auth<br/>(Supabase phone OTP)"]
+        Auth["Auth<br/>(Supabase email OTP)"]
         Storage["Image Storage<br/>(Supabase Storage)"]
         Search["Search<br/>(Postgres tsvector)"]
         Notify["Notifications<br/>(MSG91 SMS, email)"]
@@ -70,7 +70,7 @@ Not a page-level vertical — it's a layer injected into both News and Classifie
 
 | Layer | Used by | Notes |
 |---|---|---|
-| **Auth** (Supabase, phone OTP) | Both verticals + admin | One login: posting a classified, submitting news, and admin access all gate on the same `users.role` |
+| **Auth** (Supabase, email OTP) | Both verticals + admin | One login: posting a classified, submitting news, and admin access all gate on the same `users.role` |
 | **Storage** (Supabase Storage) | Both verticals | Same bucket pattern, different folders/policies — news hero images vs. classified photos |
 | **Search** (Postgres `tsvector`) | Both verticals | Single `/search` surface federating `news_articles` and `classified_listings` — no separate search service |
 | **Notifications** (MSG91 SMS, email) | Both verticals | Event-driven: listing approved, article published, expiry reminder — same dispatch code, different templates |
@@ -86,7 +86,7 @@ Stages describe *architectural* sequencing — which layers unlock which other l
 
 ```
 Stage A — Shared Foundation                     (ROADMAP Phase 1)
-  Supabase project + schema, phone OTP auth, storage buckets, env config.
+  Supabase project + schema, email OTP auth, storage buckets, env config.
   Blocks everything else. Build once, not per-vertical.
 
 Stage B — Verticals, in parallel                (ROADMAP Phase 2 + 3)
