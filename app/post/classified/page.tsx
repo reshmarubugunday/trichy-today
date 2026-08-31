@@ -1,9 +1,14 @@
+import { redirect } from 'next/navigation';
 import { PostClassifiedForm } from '@/components/forms/PostClassifiedForm';
+import { getCurrentUser } from '@/lib/auth/getCurrentUser';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = { title: 'Post a Free Classified Ad' };
 
-export default function PostClassifiedPage() {
+export default async function PostClassifiedPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect('/login?next=/post/classified');
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
