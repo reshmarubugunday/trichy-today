@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 // Where Supabase sends the user after they click the magic link in their
-// email (configured as emailRedirectTo in EmailLoginForm). Exchanges the
+// email (configured as emailRedirectTo in EmailAuthForm). Exchanges the
 // token_hash from the link for a real session, written to cookies.
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
