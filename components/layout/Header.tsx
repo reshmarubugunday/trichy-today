@@ -1,12 +1,62 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { NEWS_CATEGORIES } from '@/lib/constants';
+import { createClient } from '@/lib/supabase/client';
+import { isEditorOrAdmin, type CurrentUser } from '@/lib/auth/roles';
 
+// Auth state is loaded client-side (not passed down from the root layout)
+// so pages stay statically generated — reading cookies in a server layout
+// would force every route to render dynamically on every request.
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const loginHref = `/login?next=${encodeURIComponent(pathname)}`;
+
+  useEffect(() => {
+    // Created here, not at component-body scope — this runs only in the
+    // browser after mount, never during the server-rendered/prerendered
+    // pass, so a static build doesn't need Supabase env vars available.
+    const supabase = createClient();
+    let active = true;
+
+    async function loadUser() {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+      if (!authUser) {
+        if (active) setUser(null);
+        return;
+      }
+      const { data } = await supabase
+        .from('users')
+        .select('id, role, name, phone, is_banned')
+        .eq('id', authUser.id)
+        .maybeSingle();
+      // A banned user is treated as signed out everywhere — see getCurrentUser.ts.
+      if (active) setUser(data && !data.is_banned ? (data as CurrentUser) : null);
+    }
+
+    loadUser();
+    const { data: subscription } = supabase.auth.onAuthStateChange(() => loadUser());
+
+    return () => {
+      active = false;
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
+
+  async function handleLogout() {
+    await createClient().auth.signOut();
+    setMobileOpen(false);
+    router.push('/');
+  }
 
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
@@ -22,8 +72,19 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           <span className="opacity-80">{today}</span>
           <div className="flex items-center gap-4 opacity-80">
-            <Link href="/post/news" className="hover:opacity-100 hover:underline">Submit News</Link>
             <Link href="/post/classified" className="hover:opacity-100 hover:underline">Post Ad</Link>
+            {user ? (
+              <>
+                {isEditorOrAdmin(user) && (
+                  <Link href="/admin" className="hover:opacity-100 hover:underline">Admin</Link>
+                )}
+                <button type="button" onClick={handleLogout} className="hover:opacity-100 hover:underline">
+                  Log out
+                </button>
+              </>
+            ) : (
+              <Link href={loginHref} className="hover:opacity-100 hover:underline">Log in</Link>
+            )}
           </div>
         </div>
       </div>
@@ -117,6 +178,26 @@ export function Header() {
               <Link href="/post/classified" className="mx-4 mt-2 block text-center py-2.5 text-sm font-semibold text-white bg-primary rounded-md hover:bg-primary-dark" onClick={() => setMobileOpen(false)}>
                 Post Free Ad
               </Link>
+              {user ? (
+                <>
+                  {isEditorOrAdmin(user) && (
+                    <Link href="/admin" className="px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+                      Admin
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-4 py-2.5 text-sm text-left text-text-primary hover:bg-gray-50"
+                  >
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <Link href={loginHref} className="px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+                  Log in
+                </Link>
+              )}
             </div>
           </nav>
         </div>

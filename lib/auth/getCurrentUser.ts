@@ -1,11 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
+import { isAdmin, isEditorOrAdmin, type CurrentUser } from '@/lib/auth/roles';
 
-export interface CurrentUser {
-  id: string;
-  role: 'user' | 'editor' | 'admin';
-  name: string | null;
-  phone: string | null;
-}
+export type { CurrentUser };
+export { isEditorOrAdmin };
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createClient();
@@ -16,15 +13,14 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 
   const { data } = await supabase
     .from('users')
-    .select('id, role, name, phone')
+    .select('id, role, name, phone, is_banned')
     .eq('id', user.id)
     .maybeSingle();
 
-  return data as CurrentUser | null;
-}
-
-export function isEditorOrAdmin(user: CurrentUser | null): boolean {
-  return user?.role === 'editor' || user?.role === 'admin';
+  // Treat a banned user as signed out everywhere this is the source of
+  // truth: admin access, posting, the header's account state.
+  if (!data || data.is_banned) return null;
+  return data as CurrentUser;
 }
 
 // Every admin Server Action must call this first — Server Actions are
@@ -33,6 +29,16 @@ export function isEditorOrAdmin(user: CurrentUser | null): boolean {
 export async function requireEditor(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user || !isEditorOrAdmin(user)) {
+    throw new Error('Not authorized');
+  }
+  return user;
+}
+
+// Role/ban changes are more sensitive than ordinary moderation — require
+// the stricter admin role, not just editor-or-admin.
+export async function requireAdmin(): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (!user || !isAdmin(user)) {
     throw new Error('Not authorized');
   }
   return user;
