@@ -63,7 +63,6 @@ export function Footer() {
               <li><Link href="#" className="text-sm hover:text-white transition-colors">About Us</Link></li>
               <li><Link href="#" className="text-sm hover:text-white transition-colors">Advertise</Link></li>
               <li><Link href="#" className="text-sm hover:text-white transition-colors">Contact</Link></li>
-              <li><Link href="/post/news" className="text-sm hover:text-white transition-colors">Submit News</Link></li>
               <li><Link href="/post/classified" className="text-sm hover:text-white transition-colors">Post Free Ad</Link></li>
             </ul>
             <div className="mt-4 flex items-center gap-3">
