@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getFeaturedArticles, getBreakingNews, getAllArticles, getMostReadArticles } from '@/lib/data/getNews';
 import { getFeaturedListings } from '@/lib/data/getClassifieds';
 import { getTopAd } from '@/lib/data/getAds';
@@ -8,7 +9,7 @@ import { ClassifiedCategoryGrid } from '@/components/classifieds/ClassifiedCateg
 import { SponsoredBanner } from '@/components/ads/SponsoredBanner';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Button } from '@/components/ui/Button';
-import { TrendingUp, Plus } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 export default async function HomePage() {
   const [breakingNews, featuredArticles, { articles: latestArticles }, mostRead, classifiedListings, heroAd, classifiedsAd] =
@@ -80,9 +81,9 @@ export default async function HomePage() {
                 <div className="w-1 h-6 rounded-full bg-accent" />
                 <h2 className="text-xl font-bold text-text-primary tracking-tight">Classifieds</h2>
               </div>
-              <Button href="/post/classified" size="sm" variant="secondary">
-                <Plus className="w-3.5 h-3.5 mr-1" /> Post Free Ad
-              </Button>
+              <Link href="/classifieds" className="text-sm font-medium text-primary hover:underline">
+                View all
+              </Link>
             </div>
 
             <ClassifiedCategoryGrid />
