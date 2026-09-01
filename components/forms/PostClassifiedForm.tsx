@@ -2,10 +2,14 @@
 import { useState } from 'react';
 import { CLASSIFIED_CATEGORIES, TRICHY_AREAS } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
-import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { createListing } from '@/lib/classifieds/postListing';
+import { ChevronRight, ChevronLeft, Check, X, ImagePlus } from 'lucide-react';
 import {
   Briefcase, Home, Car, Smartphone, Wrench, Heart, GraduationCap, LayoutGrid,
 } from 'lucide-react';
+
+const MAX_IMAGES = 6;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const IconMap: Record<string, React.ElementType> = {
   Briefcase, Home, Car, Smartphone, Wrench, Heart, GraduationCap, LayoutGrid,
@@ -39,12 +43,69 @@ export function PostClassifiedForm() {
     email: '',
     whatsapp: false,
   });
+  const [images, setImages] = useState<{ file: File; previewUrl: string }[]>([]);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const selectedCat = CLASSIFIED_CATEGORIES.find((c) => c.value === form.category);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImagesSelected = (fileList: FileList | null) => {
+    if (!fileList) return;
+    const incoming = Array.from(fileList);
+    const room = MAX_IMAGES - images.length;
+
+    const tooBig = incoming.some((f) => f.size > MAX_IMAGE_BYTES);
+    const accepted = incoming.filter((f) => f.size <= MAX_IMAGE_BYTES).slice(0, room);
+
+    if (tooBig) {
+      setImageError('Some photos were skipped — max 5MB each.');
+    } else if (incoming.length > room) {
+      setImageError(`Only ${MAX_IMAGES} photos allowed — extra ones were skipped.`);
+    } else {
+      setImageError(null);
+    }
+
+    setImages((prev) => [
+      ...prev,
+      ...accepted.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })),
+    ]);
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => {
+      URL.revokeObjectURL(prev[index].previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
+    setSubmitError(null);
+
+    const formData = new FormData();
+    formData.set('title', form.title);
+    formData.set('description', form.description);
+    formData.set('category', form.category);
+    formData.set('subCategory', form.subCategory);
+    formData.set('price', form.price);
+    formData.set('priceType', form.priceType);
+    formData.set('area', form.area);
+    formData.set('name', form.name);
+    formData.set('phone', form.phone);
+    formData.set('email', form.email);
+    formData.set('whatsapp', String(form.whatsapp));
+    images.forEach(({ file }) => formData.append('images', file));
+
+    const result = await createListing(formData);
+    setSubmitting(false);
+
+    if (result.error) {
+      setSubmitError(result.error);
+      return;
+    }
     setSubmitted(true);
   };
 
@@ -190,6 +251,45 @@ export function PostClassifiedForm() {
             </select>
           </div>
 
+          <div className="mb-6">
+            <label className="text-sm font-medium text-text-primary block mb-1.5">
+              Photos <span className="text-text-secondary font-normal">(up to {MAX_IMAGES})</span>
+            </label>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              {images.map((img, i) => (
+                <div key={img.previewUrl} className="relative aspect-square rounded-lg overflow-hidden border border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img.previewUrl} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    aria-label="Remove photo"
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {images.length < MAX_IMAGES && (
+                <label className="aspect-square rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 text-text-secondary cursor-pointer hover:border-primary hover:text-primary">
+                  <ImagePlus className="w-5 h-5" />
+                  <span className="text-xs">Add photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      handleImagesSelected(e.target.files);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+            {imageError && <p className="text-sm text-primary mt-2">{imageError}</p>}
+          </div>
+
           <div className="flex gap-3">
             <Button type="button" variant="ghost" onClick={() => setStep(0)} className="flex items-center gap-1">
               <ChevronLeft className="w-4 h-4" /> Back
@@ -256,12 +356,14 @@ export function PostClassifiedForm() {
             <p>We review all listings within 2 hours to ensure quality. You&apos;ll receive a confirmation SMS once it&apos;s live.</p>
           </div>
 
+          {submitError && <p className="text-sm text-primary mb-4">{submitError}</p>}
+
           <div className="flex gap-3">
-            <Button type="button" variant="ghost" onClick={() => setStep(1)} className="flex items-center gap-1">
+            <Button type="button" variant="ghost" onClick={() => setStep(1)} disabled={submitting} className="flex items-center gap-1">
               <ChevronLeft className="w-4 h-4" /> Back
             </Button>
-            <Button type="submit" variant="primary" className="ml-auto">
-              Submit Ad →
+            <Button type="submit" variant="primary" disabled={submitting} className="ml-auto">
+              {submitting ? 'Submitting...' : 'Submit Ad →'}
             </Button>
           </div>
         </form>

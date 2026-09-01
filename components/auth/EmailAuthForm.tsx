@@ -9,12 +9,13 @@ import { Mail } from 'lucide-react';
 interface EmailAuthFormProps {
   mode: 'login' | 'signup';
   defaultEmail?: string;
+  next?: string;
 }
 
 const inputCls =
   'mt-1 w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
 
-export function EmailAuthForm({ mode, defaultEmail = '' }: EmailAuthFormProps) {
+export function EmailAuthForm({ mode, defaultEmail = '', next }: EmailAuthFormProps) {
   const supabase = createClient();
 
   const [email, setEmail] = useState(defaultEmail);
@@ -24,16 +25,27 @@ export function EmailAuthForm({ mode, defaultEmail = '' }: EmailAuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
+  const crossLinkHref = (path: '/login' | '/signup') => {
+    const params = new URLSearchParams();
+    if (path === '/signup' && email) params.set('email', email);
+    if (next) params.set('next', next);
+    const qs = params.toString();
+    return qs ? `${path}?${qs}` : path;
+  };
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setNoAccount(false);
     setLoading(true);
 
+    const confirmUrl = new URL('/auth/confirm', window.location.origin);
+    if (next) confirmUrl.searchParams.set('next', next);
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        emailRedirectTo: confirmUrl.toString(),
         shouldCreateUser: mode === 'signup',
         ...(mode === 'signup' && name.trim() ? { data: { name: name.trim() } } : {}),
       },
@@ -115,7 +127,7 @@ export function EmailAuthForm({ mode, defaultEmail = '' }: EmailAuthFormProps) {
       {noAccount && (
         <p className="text-sm text-primary">
           No account found for that email.{' '}
-          <Link href={`/signup?email=${encodeURIComponent(email)}`} className="underline font-medium">
+          <Link href={crossLinkHref('/signup')} className="underline font-medium">
             Sign up instead
           </Link>
           .
@@ -130,14 +142,14 @@ export function EmailAuthForm({ mode, defaultEmail = '' }: EmailAuthFormProps) {
         {mode === 'signup' ? (
           <>
             Already have an account?{' '}
-            <Link href="/login" className="text-primary hover:underline font-medium">
+            <Link href={crossLinkHref('/login')} className="text-primary hover:underline font-medium">
               Log in
             </Link>
           </>
         ) : (
           <>
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="text-primary hover:underline font-medium">
+            <Link href={crossLinkHref('/signup')} className="text-primary hover:underline font-medium">
               Sign up
             </Link>
           </>
