@@ -14,10 +14,27 @@ import { isEditorOrAdmin, type CurrentUser } from '@/lib/auth/roles';
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<CurrentUser | null>(null);
+  const [justSignedIn, setJustSignedIn] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   const loginHref = `/login?next=${encodeURIComponent(pathname)}`;
+
+  // The email confirmation link (app/auth/confirm/route.ts) redirects here
+  // with ?confirmed=1 on success — otherwise signing in is silent, since the
+  // only feedback would be the small "Log out" link appearing in the top bar.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('confirmed') !== '1') return;
+
+    setJustSignedIn(true);
+    params.delete('confirmed');
+    const qs = params.toString();
+    window.history.replaceState({}, '', qs ? `${pathname}?${qs}` : pathname);
+
+    const timer = setTimeout(() => setJustSignedIn(false), 5000);
+    return () => clearTimeout(timer);
+  }, [pathname]);
 
   useEffect(() => {
     // Created here, not at component-body scope — this runs only in the
@@ -88,6 +105,22 @@ export function Header() {
           </div>
         </div>
       </div>
+
+      {justSignedIn && (
+        <div className="bg-green-50 border-b border-green-100 text-green-800 text-sm">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+            <span>You&apos;re signed in.</span>
+            <button
+              type="button"
+              onClick={() => setJustSignedIn(false)}
+              aria-label="Dismiss"
+              className="text-green-800/70 hover:text-green-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Masthead */}
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
