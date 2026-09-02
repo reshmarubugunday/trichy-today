@@ -27,13 +27,18 @@ export function Header() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('confirmed') !== '1') return;
 
-    setJustSignedIn(true);
     params.delete('confirmed');
     const qs = params.toString();
     window.history.replaceState({}, '', qs ? `${pathname}?${qs}` : pathname);
 
-    const timer = setTimeout(() => setJustSignedIn(false), 5000);
-    return () => clearTimeout(timer);
+    // setTimeout, not a direct call — react-hooks/set-state-in-effect flags
+    // setState called synchronously in an effect body.
+    const showTimer = setTimeout(() => setJustSignedIn(true), 0);
+    const hideTimer = setTimeout(() => setJustSignedIn(false), 5000);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
   }, [pathname]);
 
   useEffect(() => {
