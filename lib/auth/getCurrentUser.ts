@@ -13,7 +13,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 
   const { data } = await supabase
     .from('users')
-    .select('id, role, name, phone, is_banned')
+    .select('id, role, name, email, phone, is_banned')
     .eq('id', user.id)
     .maybeSingle();
 

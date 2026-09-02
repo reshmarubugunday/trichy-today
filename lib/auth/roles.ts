@@ -6,6 +6,7 @@ export interface CurrentUser {
   id: string;
   role: 'user' | 'editor' | 'admin';
   name: string | null;
+  email: string | null;
   phone: string | null;
 }
 
