@@ -13,7 +13,10 @@ export type PriceType = 'fixed' | 'negotiable' | 'free' | 'on-request';
 
 export interface ClassifiedContact {
   name: string;
-  phone?: string;
+  // Masked form only (e.g. "●●●● ●●●● 34") — the full number is never
+  // sent to the client in the initial page payload. It's fetched on
+  // demand via the reveal-phone API route, which logs the reveal.
+  phoneMasked: string;
   email?: string;
   whatsappEnabled: boolean;
 }

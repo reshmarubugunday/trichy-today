@@ -83,7 +83,7 @@ When adding new data needs, follow this pattern:
 - **No hardcoded colors.** Use Tailwind classes that map to CSS variables (`text-primary`, `bg-accent`, `border-border`).
 - **Images always via `next/image`** with `fill` + a positioned parent for responsive images.
 - **Ads are always labeled.** The `SponsoredBanner` component renders "Advertisement" above every ad. Do not remove this.
-- **Phone numbers are sensitive.** Never render a full phone number in HTML. In the listing detail page, the number should be masked and revealed via API call only. (Not yet implemented — tracked in ROADMAP Phase 3.)
+- **Phone numbers are sensitive.** Never render a full phone number in HTML. The listing detail page shows `listing.contact.phoneMasked`; the real number is only ever fetched client-side via `POST /api/classifieds/[id]/reveal-phone`, which logs the reveal to `classified_phone_reveals`.
 - **Do not over-engineer.** Follow the roadmap phases. Don't add features that belong to a later phase.
 
 ## Roadmap
