@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Mail } from 'lucide-react';
@@ -18,6 +19,7 @@ const inputCls =
 
 export function EmailAuthForm({ mode, defaultEmail = '', next, confirmError }: EmailAuthFormProps) {
   const supabase = createClient();
+  const router = useRouter();
 
   const [email, setEmail] = useState(defaultEmail);
   const [name, setName] = useState('');
@@ -27,6 +29,10 @@ export function EmailAuthForm({ mode, defaultEmail = '', next, confirmError }: E
   const [noAccount, setNoAccount] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  const [code, setCode] = useState('');
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeLoading, setCodeLoading] = useState(false);
 
   const crossLinkHref = (path: '/login' | '/signup') => {
     const params = new URLSearchParams();
@@ -68,6 +74,29 @@ export function EmailAuthForm({ mode, defaultEmail = '', next, confirmError }: E
     setSent(true);
   }
 
+  // Fallback for the link not working — some providers (Outlook/Hotmail's
+  // Safe Links in particular) prefetch every link in an incoming email to
+  // scan it, which silently consumes the single-use magic-link token before
+  // the person ever clicks it themselves. The same email also carries a
+  // 6-digit code that isn't vulnerable to that, so offer it as an alternative.
+  async function submitCode(e: React.FormEvent) {
+    e.preventDefault();
+    setCodeError(null);
+    setCodeLoading(true);
+
+    const { error } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: 'email' });
+
+    setCodeLoading(false);
+    if (error) {
+      setCodeError(error.message);
+      return;
+    }
+
+    const target = new URL(next ?? '/', window.location.origin);
+    target.searchParams.set('confirmed', '1');
+    router.push(`${target.pathname}${target.search}`);
+  }
+
   if (sent) {
     return (
       <div className="text-center py-4">
@@ -76,9 +105,31 @@ export function EmailAuthForm({ mode, defaultEmail = '', next, confirmError }: E
         </div>
         <h2 className="text-base font-semibold text-text-primary mb-1">Check your email</h2>
         <p className="text-sm text-text-secondary">
-          We sent a sign-in link to <span className="font-medium">{email}</span>. Click it to{' '}
-          {mode === 'signup' ? 'finish creating your account' : 'log in'}.
+          We sent a sign-in link and code to <span className="font-medium">{email}</span>. Click the link
+          to {mode === 'signup' ? 'finish creating your account' : 'log in'}.
         </p>
+
+        <form onSubmit={submitCode} className="mt-5 text-left">
+          <label htmlFor="code" className="block text-sm font-medium text-text-primary">
+            Link not working? Enter the code from the email instead
+          </label>
+          <input
+            id="code"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            className={`${inputCls} text-center tracking-widest`}
+            placeholder="123456"
+          />
+          {codeError && <p className="mt-2 text-sm text-primary">{codeError}</p>}
+          <Button type="submit" fullWidth disabled={codeLoading || !code.trim()} className="mt-3">
+            {codeLoading ? 'Verifying...' : 'Verify code'}
+          </Button>
+        </form>
+
         <button
           type="button"
           onClick={() => setSent(false)}

@@ -24,3 +24,20 @@ magic link) — Supabase's built-in email sending handles delivery, no
 third-party provider needed. `users.phone` still exists as a plain, optional
 profile column, but it's no longer synced from auth or used for login;
 classified listings collect `contact_phone` per-listing independently.
+
+**Redirect URL allowlist.** Add every domain the app is actually served from
+(the production domain, and any Netlify preview/branch URLs you test with) to
+**Authentication → URL Configuration → Redirect URLs** in the dashboard. A
+magic link whose `emailRedirectTo` isn't on that list fails confirmation —
+this looks identical to the Safe Links issue below, so check this first if
+every login on a given domain fails.
+
+**6-digit code fallback.** The same OTP email also carries a numeric code
+(`EmailAuthForm` has an "enter the code" field for it), because the magic
+link alone breaks for some recipients: Outlook/Hotmail's Safe Links (and
+similar corporate email scanners) prefetch every link in an incoming email
+to scan it, which silently consumes the single-use magic-link token before
+the person ever clicks it — they see "link expired" on what looks like
+their first click. Supabase's default Magic Link template doesn't include
+the code — add `{{ .Token }}` to it under **Authentication → Email
+Templates → Magic Link**, or the fallback field has nothing to show.
