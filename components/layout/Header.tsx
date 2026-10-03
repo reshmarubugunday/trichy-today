@@ -211,9 +211,14 @@ export function Header() {
                 Post Free Ad
               </Link>
               {user ? (
-                <Link href="/account" className="px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
-                  My Account
-                </Link>
+                <>
+                  <Link href="/account" className="px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+                    My Account
+                  </Link>
+                  <Link href="/account/listings" className="px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+                    My Listings
+                  </Link>
+                </>
               ) : (
                 <Link href={loginHref} className="px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
                   Log in
