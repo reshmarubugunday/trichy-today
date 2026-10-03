@@ -1,30 +1,30 @@
 # Trichy Today – Production Roadmap
 
 ## Current State
-Frontend only, mock data, no users, no backend, not deployed.
+Phases 1–2 complete: Supabase DB, email OTP auth, image storage, admin panel, RSS ingestion. Not yet deployed (staging on Netlify). Mock data fully replaced.
 
 ---
 
 ## Phase 1 — Foundation
 > Nothing else works without these.
 
-- [ ] **Database setup** — Supabase project, run schema migrations (news, classifieds, ads, users tables)
-- [ ] **Authentication** — Email OTP login via Supabase Auth (built-in email sending, no SMS provider)
-- [ ] **Image storage** — Supabase Storage buckets for classified images and news hero images
-- [ ] **Environment config** — `.env.local` for secrets, Supabase keys, etc.
-- [ ] **Replace mock data** — Swap `lib/data/` functions to hit Supabase instead of in-memory arrays
+- [x] **Database setup** — Supabase project, run schema migrations (news, classifieds, ads, users tables)
+- [x] **Authentication** — Email OTP login via Supabase Auth (built-in email sending, no SMS provider)
+- [x] **Image storage** — Supabase Storage buckets for classified images and news hero images
+- [x] **Environment config** — `.env.local` for secrets, Supabase keys, etc.
+- [x] **Replace mock data** — Swap `lib/data/` functions to hit Supabase instead of in-memory arrays
 
 ---
 
 ## Phase 2 — Admin & Content
 > You need a way to manage content before you can go live.
 
-- [ ] **Admin panel** — Protected `/admin` route (editor/admin roles only)
+- [x] **Admin panel** — Protected `/admin` route (editor/admin roles only)
   - News article editor (create, edit, publish, archive)
   - Classifieds moderation queue (approve / reject listings)
   - Ad campaign manager (create ads, set dates, placement)
-- [ ] **RSS ingestion worker** — Cron job that pulls from 3–5 Tamil Nadu news RSS feeds, deduplicates, puts articles into moderation queue
-- [ ] **Image upload** — Wire up the classified post form to actually upload photos to Storage
+- [x] **RSS ingestion worker** — Cron job that pulls from 3–5 Tamil Nadu news RSS feeds, deduplicates, puts articles into moderation queue
+- [x] **Image upload** — Wire up the classified post form to actually upload photos to Storage
 
 ---
 
