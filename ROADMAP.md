@@ -35,7 +35,7 @@ Phases 1–2 complete: Supabase DB, email OTP auth, image storage, admin panel, 
 - [x] **Phone number masking** — Show `●●●● ●●●● 34` in UI, reveal full number only via API call (logged)
 - [ ] **Search** — Full-text search across news and classifieds (Postgres `tsvector`)
 - [ ] **Classifieds filters** — Price range, area, condition, sort by date/price
-- [ ] **My Listings page** — Logged-in user can see, edit, renew, or delete their own listings
+- [x] **My Listings page** — Logged-in user can see, edit, renew, or delete their own listings
 
 ---
 

@@ -51,6 +51,14 @@ export function AccountMenu({ user, onLogout }: AccountMenuProps) {
           >
             My Account
           </Link>
+          <Link
+            href="/account/listings"
+            role="menuitem"
+            className="block px-3 py-2 hover:bg-gray-50"
+            onClick={() => setOpen(false)}
+          >
+            My Listings
+          </Link>
           {isEditorOrAdmin(user) && (
             <Link
               href="/admin"

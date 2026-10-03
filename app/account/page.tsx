@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/getCurrentUser';
 import { LogoutButton } from '@/components/auth/LogoutButton';
+import { Button } from '@/components/ui/Button';
 
 const roleLabels: Record<string, string> = {
   user: 'Member',
@@ -35,7 +36,10 @@ export default async function AccountPage() {
         </div>
       </dl>
 
-      <div className="mt-6">
+      <div className="mt-6 flex items-center gap-3">
+        <Button href="/account/listings" variant="outline">
+          My Listings
+        </Button>
         <LogoutButton />
       </div>
     </div>
