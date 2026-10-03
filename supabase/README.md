@@ -13,6 +13,8 @@ paste each file's contents in filename order, and run it.
 4. `20260812000000_email_auth.sql` — switches the auth sync trigger from phone to email
 5. `20260815000000_capture_name_on_signup.sql` — captures the signup form's name into `public.users`
 6. `20260831000000_admin_user_management.sql` — `users.is_banned`, `is_admin()`, admin read/update RLS on `users`
+7. `20261003000000_classified_phone_reveals.sql` — `classified_phone_reveals` audit log for the reveal-phone API route
+8. `20261003010000_lock_owner_listing_update.sql` — trigger closing the column-level gap in "classified_listings owner update" (see below)
 
 If you install the Supabase CLI later, `supabase link` + `supabase db push`
 will apply these same files instead.
@@ -41,3 +43,23 @@ the person ever clicks it — they see "link expired" on what looks like
 their first click. Supabase's default Magic Link template doesn't include
 the code — add `{{ .Token }}` to it under **Authentication → Email
 Templates → Magic Link**, or the fallback field has nothing to show.
+
+## Classified listings: RLS is row-level, not column-level
+
+"classified_listings owner update" only has a `USING` clause — it decides
+*which rows* an owner can update, not *which columns*. Nothing in RLS itself
+stops an owner from calling the Supabase client directly, using their own
+session, to set `status`/`is_verified` on their own row, or even reassign
+`posted_by`. `20261003010000_lock_owner_listing_update.sql` closes that with
+a `BEFORE UPDATE` trigger instead (RLS can't do column-level enforcement;
+triggers can): any non-editor, non-service-role write resets `status` back
+to `'pending'` and leaves `is_verified`/`posted_by`/`view_count` untouched,
+no matter what the request asked for.
+
+That means `lib/classifieds/myListingsActions.ts`'s `renewMyListing` and
+`deleteMyListing` — which legitimately need to set `status` to `'active'`/
+`'removed'` as the owner, not an editor — use the **service-role client**
+instead of the session-bound one, since they already authenticate the user
+and scope the query by `posted_by` in application code before ever reaching
+the table. If you add another action that needs to move `status` outside
+the normal edit-resets-to-pending flow, it needs the same treatment.

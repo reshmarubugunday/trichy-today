@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getCurrentUser } from '@/lib/auth/getCurrentUser';
 import { ClassifiedCategory, ListingCondition, PriceType } from '@/types/classifieds';
 
@@ -17,12 +18,19 @@ function revalidateListingPaths() {
 // Soft-delete, same convention as the admin moderation queue's "reject" —
 // nothing hard-deletes classified_listings. Scoped to posted_by so this
 // can't touch another user's row even if the id is guessed.
+//
+// Uses the service-role client deliberately: the "classified_listings
+// owner update" RLS policy has no column restriction, so the regular
+// session-bound client can't be trusted to only ever reach 'removed' from
+// here — a lock_owner_listing_update trigger pins status back to 'pending'
+// for any non-editor write through that path. This function is the
+// trusted, already-authorized-and-scoped caller the trigger carves out.
 export async function deleteMyListing(id: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error('Not authorized');
 
-  const supabase = await createClient();
-  await supabase
+  const admin = createAdminClient();
+  await admin
     .from('classified_listings')
     .update({ status: 'removed' })
     .eq('id', id)
@@ -36,6 +44,9 @@ export async function deleteMyListing(id: string) {
 // separate, later concern. Restricted to active/expired: renewing a
 // pending listing makes no sense (it isn't live yet), and renewing a
 // sold/removed one would misrepresent it as available again.
+//
+// Service-role client for the same reason as deleteMyListing above — the
+// owner-update lock trigger would otherwise reset status back to 'pending'.
 export async function renewMyListing(id: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error('Not authorized');
@@ -43,8 +54,8 @@ export async function renewMyListing(id: string) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + RENEWAL_DAYS);
 
-  const supabase = await createClient();
-  await supabase
+  const admin = createAdminClient();
+  await admin
     .from('classified_listings')
     .update({ expires_at: expiresAt.toISOString(), status: 'active' })
     .eq('id', id)
