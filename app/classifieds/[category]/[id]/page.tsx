@@ -1,6 +1,7 @@
 import { getListingById, getListingsByCategory } from '@/lib/data/getClassifieds';
 import { getTopAd } from '@/lib/data/getAds';
 import { ClassifiedCard } from '@/components/classifieds/ClassifiedCard';
+import { ContactSellerCard } from '@/components/classifieds/ContactSellerCard';
 import { SponsoredBanner } from '@/components/ads/SponsoredBanner';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Badge } from '@/components/ui/Badge';
@@ -10,8 +11,7 @@ import { formatPrice, formatDate, categoryLabel } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { MapPin, Calendar, Eye, Phone, MessageSquare, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { MapPin, Calendar, Eye, CheckCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 
 interface Props {
@@ -146,49 +146,13 @@ export default async function ClassifiedDetailPage({ params }: Props) {
 
         {/* Sidebar – Contact */}
         <aside className="lg:col-span-1">
-          <div className="bg-white border border-border rounded-xl p-5 sticky top-24">
-            <h3 className="text-base font-semibold text-text-primary mb-1">Contact Seller</h3>
-            <p className="text-sm text-text-secondary mb-4">{listing.contact.name}</p>
-
-            {listing.contact.phone ? (
-              <Button
-                href={`tel:${listing.contact.phone}`}
-                variant="primary"
-                fullWidth
-                className="mb-3"
-              >
-                <Phone className="w-4 h-4 mr-2" />
-                Show Phone Number
-              </Button>
-            ) : null}
-
-            {listing.contact.whatsappEnabled && listing.contact.phone && (
-              <Button
-                href={`https://wa.me/${listing.contact.phone.replace(/\D/g, '')}`}
-                variant="secondary"
-                fullWidth
-                className="mb-3"
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Chat on WhatsApp
-              </Button>
-            )}
-
-            {listing.contact.email && (
-              <Button
-                href={`mailto:${listing.contact.email}`}
-                variant="ghost"
-                fullWidth
-              >
-                Send Email
-              </Button>
-            )}
-
-            <p className="text-[10px] text-text-secondary mt-4 leading-relaxed">
-              Always meet in a safe, public place. Verify identity before any transaction.
-              Trichy Today is not responsible for transactions between buyers and sellers.
-            </p>
-          </div>
+          <ContactSellerCard
+            listingId={listing.id}
+            contactName={listing.contact.name}
+            phoneMasked={listing.contact.phoneMasked}
+            whatsappEnabled={listing.contact.whatsappEnabled}
+            email={listing.contact.email}
+          />
 
           <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
             <p className="font-medium mb-1">⚠️ Safety Tip</p>

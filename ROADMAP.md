@@ -32,7 +32,7 @@ Phases 1–2 complete: Supabase DB, email OTP auth, image storage, admin panel, 
 > The two things users come to do: read news and post/browse classifieds.
 
 - [ ] **Classified post flow** — End-to-end: user logs in → posts ad with images → goes to pending → approved → live → expires after 60 days
-- [ ] **Phone number masking** — Show `●●●● ●●●● 34` in UI, reveal full number only via API call (logged)
+- [x] **Phone number masking** — Show `●●●● ●●●● 34` in UI, reveal full number only via API call (logged)
 - [ ] **Search** — Full-text search across news and classifieds (Postgres `tsvector`)
 - [ ] **Classifieds filters** — Price range, area, condition, sort by date/price
 - [ ] **My Listings page** — Logged-in user can see, edit, renew, or delete their own listings
