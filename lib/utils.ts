@@ -50,6 +50,24 @@ export function formatPrice(price: number, currency = 'INR'): string {
   }).format(price);
 }
 
+// Masks all but the last 2 digits, grouped in 4s to match the ROADMAP
+// example: "9876543210" → "●●●● ●●●● 10". Used for classified listing
+// contact numbers — the full number is only ever sent to the client via
+// the reveal-phone API call, logged, never in the initial page HTML.
+export function maskPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length <= 2) return '●'.repeat(digits.length);
+
+  const visible = digits.slice(-2);
+  const masked = '●'.repeat(digits.length - 2);
+  const groups: string[] = [];
+  for (let i = 0; i < masked.length; i += 4) {
+    groups.push(masked.slice(i, i + 4));
+  }
+  groups.push(visible);
+  return groups.join(' ');
+}
+
 export function categoryLabel(category: string): string {
   return category
     .split('-')

@@ -1,14 +1,14 @@
 import { ClassifiedListing, ClassifiedCategory } from '@/types/classifieds';
 import { createClient } from '@/lib/supabase/server';
+import { maskPhone } from '@/lib/utils';
 
 // RLS scopes rows already (public: active only; owner: + their own listings;
 // editors/admins: everything) — see auth_and_rls.sql.
 //
-// contact.phone is intentionally left out of the mapped shape: full phone
-// numbers must never be rendered in HTML (masked reveal via API is Phase 3,
-// not built yet — see CLAUDE.md "Key Conventions"). Leaving it undefined
-// here means the existing UI's `listing.contact.phone ? … : …` branches
-// already degrade to the no-phone state with no component changes needed.
+// contact_phone is selected but only ever mapped to its masked form here —
+// the full number must never be rendered in HTML. It's fetched on demand
+// via the reveal-phone API route (app/api/classifieds/[id]/reveal-phone),
+// which logs every reveal. See CLAUDE.md "Key Conventions".
 
 type ListingRow = {
   id: string;
@@ -24,6 +24,7 @@ type ListingRow = {
   images: string[];
   condition: ClassifiedListing['condition'] | null;
   contact_name: string;
+  contact_phone: string;
   contact_email: string | null;
   whatsapp_enabled: boolean;
   posted_at: string;
@@ -34,7 +35,7 @@ type ListingRow = {
 };
 
 const LISTING_SELECT =
-  'id, slug, title, description, category, sub_category, price, price_type, area, pincode, images, condition, contact_name, contact_email, whatsapp_enabled, posted_at, expires_at, is_verified, is_premium, view_count';
+  'id, slug, title, description, category, sub_category, price, price_type, area, pincode, images, condition, contact_name, contact_phone, contact_email, whatsapp_enabled, posted_at, expires_at, is_verified, is_premium, view_count';
 
 function mapListing(row: ListingRow): ClassifiedListing {
   return {
@@ -56,6 +57,7 @@ function mapListing(row: ListingRow): ClassifiedListing {
     condition: row.condition ?? undefined,
     contact: {
       name: row.contact_name,
+      phoneMasked: maskPhone(row.contact_phone),
       email: row.contact_email ?? undefined,
       whatsappEnabled: row.whatsapp_enabled,
     },
