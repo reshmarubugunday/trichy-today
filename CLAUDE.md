@@ -22,6 +22,11 @@ app/                        # Next.js App Router pages
   classifieds/[category]/[id]/  # Listing detail
   post/classified/          # 3-step post-an-ad wizard
   post/news/                # Submit news form
+  login/, signup/           # Email OTP auth pages
+  auth/confirm/             # Email OTP confirmation callback
+  account/                  # Logged-in user's profile page
+  admin/                    # Protected admin panel (news, classifieds, moderation, ads, users)
+  api/cron/rss-ingest/      # RSS ingestion worker endpoint (Netlify scheduled function)
 
 components/
   layout/                   # Header, Footer, BreakingNewsTicker
@@ -32,10 +37,15 @@ components/
   ui/                       # Badge, Button, SectionHeader, SearchBar
 
 lib/
-  mock-data/                # news.ts, classifieds.ts, ads.ts — all current data
-  data/                     # getNews.ts, getClassifieds.ts, getAds.ts — async data access layer
+  data/                     # getNews.ts, getClassifieds.ts, getAds.ts — async data access layer (Supabase-backed)
+  supabase/                 # Supabase client setup (browser/server)
+  auth/                     # Email OTP auth helpers
+  admin/                    # Admin panel data helpers
+  classifieds/              # postListing.ts — classified post flow incl. image upload
+  rss/                      # RSS feed sources + ingestion worker logic
   constants.ts              # NEWS_CATEGORIES, CLASSIFIED_CATEGORIES, TRICHY_AREAS
   utils.ts                  # formatDate, formatPrice, truncateText, slugify
+  env.ts                    # typed env var access
 
 types/
   news.ts                   # NewsArticle, NewsCategory
@@ -59,14 +69,12 @@ Defined in `app/globals.css` under `@theme`. Use Tailwind utility classes — do
 
 ## Data Layer
 
-All data is currently **mock** — hardcoded arrays in `lib/mock-data/`. The functions in `lib/data/` wrap them as `async` functions so switching to a real database (Supabase) only requires changing those files. Pages and components do not need to change.
-
-**Do not** add a real database until Phase 1 of `ROADMAP.md` is started.
+Data is now backed by **Supabase** (Phase 1 complete). `lib/mock-data/` is gone — the `async` functions in `lib/data/` query Supabase directly (via `lib/supabase/`). Pages and components consume `lib/data/` the same way they always did.
 
 When adding new data needs, follow this pattern:
 1. Add types to `types/`
-2. Add mock data to `lib/mock-data/`
-3. Add async accessor functions to `lib/data/`
+2. Add/extend the Supabase schema via a migration in `supabase/migrations/`
+3. Add async accessor functions to `lib/data/` that query Supabase
 4. Use those functions in server components
 
 ## Key Conventions
@@ -80,9 +88,9 @@ When adding new data needs, follow this pattern:
 
 ## Roadmap
 
-See `ROADMAP.md` for the full 8-phase plan. Current status: **Phase 0 complete** (frontend with mock data).
+See `ROADMAP.md` for the full 8-phase plan. Current status: **Phases 1–2 complete** (Supabase DB, email OTP auth, image storage, admin panel, RSS ingestion worker).
 
-**Next:** Phase 1 — Supabase DB, email OTP auth, image storage, replace mock data.
+**Next:** Phase 3 — Core user flows: end-to-end classified post flow, phone number masking, search, classifieds filters, My Listings page.
 
 ## Running Locally
 

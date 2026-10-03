@@ -15,7 +15,11 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      // Signed-in state is otherwise silent — the header updates on the client
+      // but there's nothing telling the user the link actually worked.
+      const redirectTo = new URL(next, origin);
+      redirectTo.searchParams.set('confirmed', '1');
+      return NextResponse.redirect(redirectTo);
     }
   }
 
