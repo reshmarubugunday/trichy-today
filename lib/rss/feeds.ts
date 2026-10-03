@@ -20,4 +20,9 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     url: 'https://timesofindia.indiatimes.com/rssfeeds/2950623.cms',
     category: 'local',
   },
+  {
+    name: 'The New Indian Express – Tamil Nadu',
+    url: 'https://www.newindianexpress.com/states/tamil-nadu/rssfeed/?id=170&getXmlFeed=true',
+    category: 'local',
+  },
 ];

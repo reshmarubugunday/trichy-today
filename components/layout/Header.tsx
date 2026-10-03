@@ -2,11 +2,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { SearchBar } from '@/components/ui/SearchBar';
+import { AccountMenu } from '@/components/layout/AccountMenu';
 import { NEWS_CATEGORIES } from '@/lib/constants';
 import { createClient } from '@/lib/supabase/client';
-import { isEditorOrAdmin, type CurrentUser } from '@/lib/auth/roles';
+import { type CurrentUser } from '@/lib/auth/roles';
 
 // Auth state is loaded client-side (not passed down from the root layout)
 // so pages stay statically generated — reading cookies in a server layout
@@ -14,10 +15,32 @@ import { isEditorOrAdmin, type CurrentUser } from '@/lib/auth/roles';
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<CurrentUser | null>(null);
+  const [justSignedIn, setJustSignedIn] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   const loginHref = `/login?next=${encodeURIComponent(pathname)}`;
+
+  // The email confirmation link (app/auth/confirm/route.ts) redirects here
+  // with ?confirmed=1 on success — otherwise signing in is silent, since the
+  // only feedback would be the small "Log out" link appearing in the top bar.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('confirmed') !== '1') return;
+
+    params.delete('confirmed');
+    const qs = params.toString();
+    window.history.replaceState({}, '', qs ? `${pathname}?${qs}` : pathname);
+
+    // setTimeout, not a direct call — react-hooks/set-state-in-effect flags
+    // setState called synchronously in an effect body.
+    const showTimer = setTimeout(() => setJustSignedIn(true), 0);
+    const hideTimer = setTimeout(() => setJustSignedIn(false), 5000);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     // Created here, not at component-body scope — this runs only in the
@@ -36,7 +59,7 @@ export function Header() {
       }
       const { data } = await supabase
         .from('users')
-        .select('id, role, name, phone, is_banned')
+        .select('id, role, name, email, phone, is_banned')
         .eq('id', authUser.id)
         .maybeSingle();
       // A banned user is treated as signed out everywhere — see getCurrentUser.ts.
@@ -71,23 +94,32 @@ export function Header() {
       <div className="bg-primary text-white text-xs py-1.5">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           <span className="opacity-80">{today}</span>
-          <div className="flex items-center gap-4 opacity-80">
-            <Link href="/post/classified" className="hover:opacity-100 hover:underline">Post Ad</Link>
+          <div className="flex items-center gap-4">
+            <Link href="/post/classified" className="opacity-80 hover:opacity-100 hover:underline">Post Ad</Link>
             {user ? (
-              <>
-                {isEditorOrAdmin(user) && (
-                  <Link href="/admin" className="hover:opacity-100 hover:underline">Admin</Link>
-                )}
-                <button type="button" onClick={handleLogout} className="hover:opacity-100 hover:underline">
-                  Log out
-                </button>
-              </>
+              <AccountMenu user={user} onLogout={handleLogout} />
             ) : (
-              <Link href={loginHref} className="hover:opacity-100 hover:underline">Log in</Link>
+              <Link href={loginHref} className="opacity-80 hover:opacity-100 hover:underline">Log in</Link>
             )}
           </div>
         </div>
       </div>
+
+      {justSignedIn && (
+        <div className="bg-green-50 border-b border-green-100 text-green-800 text-sm">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+            <span>You&apos;re signed in.</span>
+            <button
+              type="button"
+              onClick={() => setJustSignedIn(false)}
+              aria-label="Dismiss"
+              className="text-green-800/70 hover:text-green-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Masthead */}
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
@@ -179,20 +211,9 @@ export function Header() {
                 Post Free Ad
               </Link>
               {user ? (
-                <>
-                  {isEditorOrAdmin(user) && (
-                    <Link href="/admin" className="px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
-                      Admin
-                    </Link>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="px-4 py-2.5 text-sm text-left text-text-primary hover:bg-gray-50"
-                  >
-                    Log out
-                  </button>
-                </>
+                <Link href="/account" className="px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
+                  My Account
+                </Link>
               ) : (
                 <Link href={loginHref} className="px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-gray-50" onClick={() => setMobileOpen(false)}>
                   Log in

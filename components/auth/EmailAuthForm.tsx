@@ -10,17 +10,20 @@ interface EmailAuthFormProps {
   mode: 'login' | 'signup';
   defaultEmail?: string;
   next?: string;
+  confirmError?: boolean;
 }
 
 const inputCls =
   'mt-1 w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
 
-export function EmailAuthForm({ mode, defaultEmail = '', next }: EmailAuthFormProps) {
+export function EmailAuthForm({ mode, defaultEmail = '', next, confirmError }: EmailAuthFormProps) {
   const supabase = createClient();
 
   const [email, setEmail] = useState(defaultEmail);
   const [name, setName] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    confirmError ? "That link didn't work — it may have expired. Enter your email to get a new one." : null
+  );
   const [noAccount, setNoAccount] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
